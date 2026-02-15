@@ -11,17 +11,24 @@ def extract_data():
         "sparkline": False
     }
 
-    response = requests.get(url, params=params)
-    if response.status_code != 200:
-        print("Error fetching data")
-        return None
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        return response.json()
 
-    return response.json()
+    except requests.exceptions.Timeout:
+        print("Request timed out.")
+    except requests.exceptions.HTTPError as err:
+        print(f"HTTP error occurred: {err}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+    return None
 
 def transform_data(data):
     if not data:
-    print("No data to transform.")
-    return None
+        print("No data to transform.")
+        return None
 
     df = pd.DataFrame(data)
 
@@ -29,23 +36,35 @@ def transform_data(data):
         print("DataFrame is empty.")
         return None
     
-    df = df[[
+    required_columns = [
         "id",
         "symbol",
         "name",
         "current_price",
         "market_cap",
         "total_volume"
-    ]]
+    ]
+
+    missing_cols = [col for col in required_columns if col not in df.columns]
+
+    if missing_cols:
+        print(f"Missing columns: {missing_cols}")
+        return None
+
+    df = df[required_columns]
+
     return df
 
 def load_data(df):
     if df is None:
-    print("No data to load.")
-    return
+        print("No data to load.")
+        return
 
-    df.to_csv("data/crypto_data.csv", index=False)
-    print("Data saved successfully.")
+    try:
+        df.to_csv("data/crypto_data.csv", index=False)
+        print("Data saved successfully.")
+    except Exception as e:
+        print(f"Error saving file: {e}")
 
 def main():
     data = extract_data()
