@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+from datetime import datetime
 
 def extract_data():
     url = "https://api.coingecko.com/api/v3/coins/markets"
@@ -53,6 +54,29 @@ def transform_data(data):
 
     df = df[required_columns]
 
+    #data quality
+    print("Data types before transformation:")
+    print(df.dtypes)
+
+    numeric_columns = ["current_price", "market_cap", "total_volume"]
+    
+    #numericos
+    for col in numeric_columns:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
+    #nulos
+    if df[numeric_columns].isnull().any().any():
+        print("Warning: Null values detected in numeric columns.")
+    #df = df.dropna()
+
+    if (df[numeric_columns] < 0).any().any():
+        print("Warning: Negative values detected.")
+    #añadir timestamp (fecha de carga)
+    
+    df["timestamp"] = datetime.utcnow()
+    #fin quality
+    print("Transformation completed successfully.")
+        print(f"Rows processed: {len(df)}")
+    
     return df
 
 def load_data(df):
