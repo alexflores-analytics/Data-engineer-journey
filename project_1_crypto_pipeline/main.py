@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import datetime
 
 def extract_data():
+    print("[EXTRACT] Requesting data from CoinGecko API...")
     url = "https://api.coingecko.com/api/v3/coins/markets"
     params = {
         "vs_currency": "usd",
@@ -23,20 +24,22 @@ def extract_data():
         print(f"HTTP error occurred: {err}")
     except Exception as e:
         print(f"Unexpected error: {e}")
-
+        
+    print("[EXTRACT] Data extraction successful.")
     return None
 
 def transform_data(data):
+    print("[TRANSFORM] Starting data transformation...")
     if not data:
         print("No data to transform.")
         return None
 
     df = pd.DataFrame(data)
-
     if df.empty:
         print("DataFrame is empty.")
         return None
-    
+        
+    print(f"[TRANSFORM] Rows received: {len(df)}")
     required_columns = [
         "id",
         "symbol",
@@ -51,7 +54,7 @@ def transform_data(data):
     if missing_cols:
         print(f"Missing columns: {missing_cols}")
         return None
-
+    
     df = df[required_columns]
 
     #data quality
@@ -83,6 +86,7 @@ def load_data(df):
     if df is None:
         print("No data to load.")
         return
+    print("[LOAD] Saving dataset...")
 
     try:
         df.to_csv("data/crypto_data.csv", index=False)
